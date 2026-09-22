@@ -838,7 +838,7 @@ body.dark .cx-chip{background:rgba(255,255,255,.08);color:#fff}body.dark .cx-chi
 /* ===== photos and figure layouts ===== */
 .slide--fmt .slide-inner{max-width:1080px}
 .fmt-row{position:relative;width:100%}
-.fmt-head{position:absolute;top:50%;transform:translateY(-50%);width:min(215px,calc((100vw - 1080px)/2 + 22px));height:auto;pointer-events:none;filter:drop-shadow(0 18px 28px rgba(0,30,54,.14))}
+.fmt-head{position:absolute;top:50%;transform:translateY(-50%);width:min(215px,calc((100vw - 1080px)/2 + 22px));height:auto;pointer-events:auto;filter:drop-shadow(0 18px 28px rgba(0,30,54,.14))}
 .fmt-head.l{right:calc(100% + 30px)}
 .fmt-head.r{left:calc(100% + 30px)}
 @media (max-width:1219px){.fmt-head{display:none}}
@@ -1080,6 +1080,8 @@ body.dark .pccap{color:rgba(255,255,255,.6)}
 body.dark .f7{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)}body.dark .f7 .fn{color:#fff}body.dark .f7n{background:rgba(255,255,255,.1);color:#fff}
 @media (max-height:860px){.f7{padding:6px 12px 6px 8px;gap:10px}.f7n{flex-basis:30px;height:30px;font-size:13px}.f7 .fn{font-size:14px}}
 .slide-inner:has(.cx.on) .f7 .fe,.slide-inner:has(.cx.on) .f7 .fd{display:none}.slide-inner:has(.cx.on) .f7{padding:4px 12px 4px 8px}.slide-inner:has(.cx.on) .ph-split.pl{--lf:.45fr}.slide-inner:has(.cx.on) .ph-split.pl .bul li{padding-top:3px;padding-bottom:3px;font-size:12.5px}.slide-inner:has(.cx.on) .ph-split.pl .tissue{padding:10px 16px 4px}.slide-inner:has(.cx.on) .note{display:none}
+.slide img:not(.bk img){cursor:zoom-in}
+.lb img{background:transparent}
 </style>
 </head>
 <body>
@@ -2489,10 +2491,13 @@ document.querySelectorAll('.flip-card').forEach(function(c){c.addEventListener('
 <script>
 (function(){
   var lb=document.getElementById('lb'),im=document.getElementById('lbImg'),cap=document.getElementById('lbCap'),num=document.getElementById('lbN'),list=[],idx=0;
-  function show(i){idx=(i+list.length)%list.length;var t=list[idx];im.src=t.querySelector('img').src;cap.innerHTML=t.getAttribute('data-cap');num.textContent=(idx+1)+' / '+list.length;}
+  function show(i){idx=(i+list.length)%list.length;var t=list[idx];im.src=t.src;cap.innerHTML=capOf(t);num.textContent=(idx+1)+' / '+list.length;document.getElementById('lbPrev').style.display=document.getElementById('lbNext').style.display=list.length>1?'':'none';}
   function close(){lb.classList.remove('on');}
-  document.addEventListener('click',function(e){var t=e.target.closest('.gtile');if(!t||lb.classList.contains('on'))return;
-    list=Array.prototype.slice.call(t.closest('.ggrid').querySelectorAll('.gtile'));lb.classList.add('on');show(list.indexOf(t));});
+    function visible(el){return !!(el.offsetWidth||el.offsetHeight||el.getClientRects().length);}
+  function items(slide){return Array.prototype.slice.call(slide.querySelectorAll('img')).filter(function(im){return visible(im)&&!im.closest('.bk')&&!im.closest('.lb')&&!im.closest('.nav-controls')&&im.naturalWidth>40;});}
+  function capOf(im){var f=im.closest('[data-cap]');if(f)return f.getAttribute('data-cap');var fig=im.closest('figure');var fc=fig&&fig.querySelector('figcaption');if(fc){var vis=Array.prototype.filter.call(fc.querySelectorAll('span'),visible);return vis.length?vis.map(function(s){return s.textContent;}).join(' '):fc.textContent;}var ax=im.closest('.axcard');var ac=ax&&ax.querySelector('.axcap');return ac?ac.textContent:(im.getAttribute('alt')||'');}
+  document.addEventListener('click',function(e){if(lb.classList.contains('on'))return;var im=e.target.closest('img');if(!im||im.closest('.bk')||im.closest('.lb')||im.closest('button'))return;var slide=im.closest('.slide');if(!slide)return;
+    list=items(slide);var k=list.indexOf(im);if(k<0)return;e.preventDefault();e.stopPropagation();lb.classList.add('on');show(k);},true);
   document.getElementById('lbPrev').addEventListener('click',function(e){e.stopPropagation();show(idx-1);});
   document.getElementById('lbNext').addEventListener('click',function(e){e.stopPropagation();show(idx+1);});
   im.addEventListener('click',function(e){e.stopPropagation();show(idx+1);});
